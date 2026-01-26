@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - beta
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release-dry:
+    name: Release Dry Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    outputs:
+      version: ${{ steps.semantic-release-dry.outputs.new_release_version }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v5
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        id: semantic-release-dry
+        with:
+          dry_run: true
+          semantic_version: 24.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: [release-dry]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.6
+      - name: Go Build
+        run: go build -ldflags "-X github.com/PadBro/alias-bro/internal.Version=${{ needs.release-dry.outputs.version }}"
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: alias-bro
+          path: alias-bro
+
+  release:
+    name: Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v5
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: alias-bro
+          path: .
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        id: semantic-release
+        with:
+          semantic_version: 24.2.3
+          extra_plugins: |
+            @semantic-release/git
+            @semantic-release/github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+
