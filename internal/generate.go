@@ -18,12 +18,12 @@ func GenerateSourceFile() {
 
 			newCommand := command
 			if !strings.Contains(command, "\"$@\"") {
-			    newCommand = fmt.Sprintf("%s \"$@\"", command)
+				newCommand = fmt.Sprintf("%s \"$@\"", command)
 			}
 
 			output = append(output, fmt.Sprintf("\texecute %s", newCommand))
 		}
-		output = append(output, fmt.Sprintf("}\n"))
+		output = append(output, "}\n")
 	}
 	output = append(output, `execute() {
     local GREEN="\e[32m"
