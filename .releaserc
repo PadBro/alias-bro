@@ -10,6 +10,7 @@
             "@semantic-release/github", {
                 "assets": [
                     {"path": "alias-bro"}
+                    {"path": "alias-bro-darwin"}
                 ]
             }
         ]
