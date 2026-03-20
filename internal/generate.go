@@ -12,7 +12,18 @@ func GenerateSourceFile() {
 
 	var output []string
 	for alias, command := range aliases {
-		output = append(output, fmt.Sprintf("%s() {\n\texecute %s \"$@\"\n}\n", alias, command))
+		commands := strings.Split(command, " && ")
+		output = append(output, fmt.Sprintf("%s() {", alias))
+		for _, command := range commands {
+
+			newCommand := command
+			if !strings.Contains(command, "\"$@\"") {
+			    newCommand = fmt.Sprintf("%s \"$@\"", command)
+			}
+
+			output = append(output, fmt.Sprintf("\texecute %s", newCommand))
+		}
+		output = append(output, fmt.Sprintf("}\n"))
 	}
 	output = append(output, `execute() {
     local GREEN="\e[32m"
